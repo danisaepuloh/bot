@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puslat Chatbot</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        .chat-box { height: 450px; overflow-y: auto; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.5rem; }
+        .msg { max-width: 75%; padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; }
+        .msg.user { background-color: #0d6efd; color: white; margin-left: auto; border-bottom-right-radius: 2px; }
+        .msg.bot { background-color: #e9ecef; color: #212529; margin-right: auto; border-bottom-left-radius: 2px; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center fw-bold">
+                    Gemini AI Chatbot
+                </div>
+                <div class="card-body">
+                    <!-- Area Chat -->
+                    <div class="chat-box p-3 mb-3" id="chatBox">
+                        <div class="msg bot">Halo! Ada yang bisa saya bantu hari ini?</div>
+                    </div>
+                    <!-- Area Input -->
+                    <div class="input-group">
+                        <input type="text" id="userInput" class="form-control" placeholder="Ketik pesan..." onkeypress="handleKeyPress(event)">
+                        <button class="btn btn-primary" onclick="sendMessage()" id="sendBtn">Kirim</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    const GAS_URL = "MASUKKAN_URL_WEB_APP_GAS_ANDA_DI_SINI";
+
+    async function sendMessage() {
+        const inputElement = document.getElementById("userInput");
+        const chatBox = document.getElementById("chatBox");
+        const sendBtn = document.getElementById("sendBtn");
+        const messageText = inputElement.value.trim();
+
+        if (!messageText) return;
+
+        // Tampilkan pesan User di layar
+        appendMessage(messageText, 'user');
+        inputElement.value = "";
+        
+        // Efek Loading & Disable tombol
+        sendBtn.disabled = true;
+        sendBtn.innerText = "...";
+
+        try {
+            // Mengirim data menggunakan metode text/plain guna menghindari isu CORS Preflight di GAS
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: messageText
+            });
+
+            const data = await response.json();
+            appendMessage(data.reply, 'bot');
+        } catch (error) {
+            console.error(error);
+            appendMessage("Gagal terhubung ke server.", 'bot');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerText = "Kirim";
+        }
+    }
+
+    function appendMessage(text, sender) {
+        const chatBox = document.getElementById("chatBox");
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("msg", sender);
+        msgDiv.innerText = text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // Auto scroll ke bawah
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    }
+</script>
+</body>
+</html>
